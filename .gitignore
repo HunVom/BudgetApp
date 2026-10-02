@@ -1,0 +1,22 @@
+# .NET
+**/bin/
+**/obj/
+
+# Angular / Node
+**/node_modules/
+**/.angular/
+**/dist/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
