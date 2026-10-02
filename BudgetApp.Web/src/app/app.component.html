@@ -2,7 +2,7 @@
 
 <div>
   <label>Típus:</label>
-  <select [(ngModel)]="type">
+  <select [(ngModel)]="type()" (ngModelChange)="type.set($event)">
     <option value="income">Bevétel</option>
     <option value="expense">Kiadás</option>
   </select>
@@ -23,4 +23,4 @@
 <hr>
 
 <h2>Egyenleg</h2>
-<p>{{ balance }} Ft</p>
+<p>{{ balance() }} Ft</p>
