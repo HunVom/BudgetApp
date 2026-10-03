@@ -14,6 +14,11 @@ public class TransactionsController : ControllerBase
         this.db = db;
     }
 
+    [HttpGet("{id}")]
+    public IActionResult GetById(int id) {
+        db.Transactions.Find(id);
+    }
+
     [HttpPost]
     public IActionResult Create(Transaction transaction)
     {

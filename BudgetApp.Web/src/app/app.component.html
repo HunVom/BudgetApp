@@ -1,8 +1,10 @@
 <h1>Budget App</h1>
 
+<a routerLink="/transaction/4">Details</a>
+
 <div>
   <label>Típus:</label>
-  <select [(ngModel)]="type()" (ngModelChange)="type.set($event)">
+  <select [(ngModel)]="type" (ngModelChange)="type.set($event)">
     <option value="income">Bevétel</option>
     <option value="expense">Kiadás</option>
   </select>
