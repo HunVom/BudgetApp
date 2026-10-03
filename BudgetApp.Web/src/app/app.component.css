@@ -1,0 +1,33 @@
+.transaction-list {
+  max-width: 600px;
+}
+
+.transaction {
+  display: grid;
+  grid-template-columns: 120px 1fr 150px;
+  gap: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+  align-items: center;
+}
+
+.transaction-date {
+  color: #666;
+}
+
+.transaction-type {
+  font-weight: 500;
+}
+
+.transaction-amount {
+  text-align: right;
+  font-weight: bold;
+}
+
+.income {
+  color: green;
+}
+
+.expense {
+  color: red;
+}

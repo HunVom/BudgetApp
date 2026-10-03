@@ -14,11 +14,6 @@ public class TransactionsController : ControllerBase
         this.db = db;
     }
 
-    [HttpGet("{id}")]
-    public IActionResult GetById(int id) {
-        db.Transactions.Find(id);
-    }
-
     [HttpPost]
     public IActionResult Create(Transaction transaction)
     {
@@ -42,5 +37,16 @@ public class TransactionsController : ControllerBase
         }
 
         return Ok(balance);
+    }
+
+    [HttpGet]
+    public IActionResult GetTransactions()
+    {
+        var transactions = db.Transactions
+        .OrderByDescending(transaction => transaction.Id)
+        .Take(100)
+        .ToList();
+
+        return Ok(transactions);
     }
 }

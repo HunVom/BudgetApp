@@ -1,10 +1,8 @@
 <h1>Budget App</h1>
 
-<a routerLink="/transaction/4">Details</a>
-
 <div>
   <label>Típus:</label>
-  <select [(ngModel)]="type" (ngModelChange)="type.set($event)">
+  <select [ngModel]="type" (ngModelChange)="type.set($event)">
     <option value="income">Bevétel</option>
     <option value="expense">Kiadás</option>
   </select>
@@ -12,12 +10,12 @@
 
 <div>
   <label>Összeg:</label>
-  <input type="number" [(ngModel)]="amount">
+  <input type="number" [ngModel]="amount" (ngModelChange)="amount.set($event)">
 </div>
 
 <div>
   <label>Dátum:</label>
-  <input type="date" [(ngModel)]="date">
+  <input type="date" [ngModel]="date" (ngModelChange)="date.set($event)">
 </div>
 
 <button (click)="save()">Mentés</button>
@@ -25,4 +23,29 @@
 <hr>
 
 <h2>Egyenleg</h2>
-<p>{{ balance() }} Ft</p>
+<p>{{ balance() | number:'1.0-0' }} Ft</p>
+
+<hr>
+
+<h2>Tranzakciók</h2>
+
+<div class="transaction-list">
+  @for (transaction of transactions(); track transaction.id) {
+    <div class="transaction">
+      <span class="transaction-date">
+        {{ transaction.date | date:'yyyy.MM.dd.' }}
+      </span>
+
+      <span class="transaction-type">
+        {{ transaction.type === 0 ? 'Bevétel' : 'Kiadás' }}
+      </span>
+
+      <span class="transaction-amount"
+        class="transaction-amount"
+        [class.income]="transaction.type === 0"
+        [class.expense]="transaction.type === 1">
+        {{ transaction.type === 0 ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} Ft
+      </span>
+    </div>
+  }
+</div>
