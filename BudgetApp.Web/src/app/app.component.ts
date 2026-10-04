@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DatePipe, DecimalPipe } from '@angular/common';
@@ -22,6 +22,7 @@ interface Account {
   selector: 'app-root',
   imports: [FormsModule, DatePipe, DecimalPipe],
   templateUrl: './app.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
