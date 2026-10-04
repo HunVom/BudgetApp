@@ -24,6 +24,12 @@ export class AppComponent implements OnInit {
   protected balance = signal<number>(0);
   protected transactions = signal<Transaction[]>([]);
   protected note = signal<string>('');
+  protected editPanelOpen = signal<boolean>(false);
+  protected selectedTransaction = signal<Transaction | null>(null);
+  protected editType = signal<string>('income');
+  protected editAmount = signal<number>(0);
+  protected editDate = signal<string>('');
+  protected editNote = signal<string>('');
 
   constructor(private http: HttpClient) { }
 
@@ -59,6 +65,43 @@ export class AppComponent implements OnInit {
         this.loadBalance();
         this.loadTransactions();
       });
+  }
+
+  protected saveEdit() {
+  const transaction = this.selectedTransaction();
+
+  if (!transaction)
+    return;
+
+  const updatedTransaction = {
+    type: this.editType() === 'income' ? 0 : 1,
+    amount: this.editAmount(),
+    date: this.editDate(),
+    note: this.editNote()
+  };
+
+  this.http.put(`http://localhost:5093/transactions/${transaction.id}`, updatedTransaction)
+    .subscribe(() => {
+      this.loadBalance();
+      this.loadTransactions();
+      this.closeEditPanel();
+    });
+}
+
+  protected openEditPanel(transaction: Transaction) {
+    this.selectedTransaction.set(transaction);
+
+    this.editType.set(transaction.type === 0 ? 'income' : 'expense');
+    this.editAmount.set(transaction.amount);
+    this.editDate.set(transaction.date.substring(0, 10)); // Extract the date part from the datetime string
+    this.editNote.set(transaction.note);
+
+    this.editPanelOpen.set(true);
+  }
+
+    protected closeEditPanel() {
+    this.selectedTransaction.set(null);  
+    this.editPanelOpen.set(false);
   }
 
   private loadBalance() {

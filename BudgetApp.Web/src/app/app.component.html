@@ -1,4 +1,8 @@
-<h1>Budget App</h1>
+<div class="app-layout" [class.panel-open]="editPanelOpen()">
+
+  <main class="main-content">
+
+  <h1>Budget App</h1>
 
 <div>
   <label>Típus:</label>
@@ -75,6 +79,70 @@
       </span>
 
       <button (click)="deleteTransaction(transaction.id)">Törlés</button>
+      <button (click)="openEditPanel(transaction)">Szerkesztés</button>
+      <button (click)="deleteTransaction(transaction.id)">Törlés</button>
     </div>
   }
+</div>
+
+  </main>
+
+  @if (editPanelOpen()) {
+    <aside class="side-panel">
+      <h2>Tranzakció szerkesztése</h2>
+      @if (selectedTransaction(); as transaction) {
+  <div>
+    <label>Típus:</label>
+
+    <label>
+      <input
+        type="radio"
+        name="editType"
+        value="income"
+        [ngModel]="editType()"
+        (ngModelChange)="editType.set($event)">
+      Bevétel
+    </label>
+
+    <label>
+      <input
+        type="radio"
+        name="editType"
+        value="expense"
+        [ngModel]="editType()"
+        (ngModelChange)="editType.set($event)">
+      Kiadás
+    </label>
+  </div>
+
+  <div>
+    <label>Összeg:</label>
+    <input
+      type="number"
+      [ngModel]="editAmount()"
+      (ngModelChange)="editAmount.set($event)">
+  </div>
+
+  <div>
+    <label>Dátum:</label>
+    <input
+      type="date"
+      [ngModel]="editDate()"
+      (ngModelChange)="editDate.set($event)">
+  </div>
+
+  <div>
+    <label>Megjegyzés:</label>
+    <input
+      type="text"
+      [ngModel]="editNote()"
+      (ngModelChange)="editNote.set($event)">
+  </div>
+}
+
+<button (click)="saveEdit()">Mentés</button>
+<button (click)="closeEditPanel()">Bezárás</button>
+    </aside>
+  }
+
 </div>

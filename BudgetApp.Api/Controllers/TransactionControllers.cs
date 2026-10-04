@@ -23,6 +23,24 @@ public class TransactionsController : ControllerBase
         return Ok(transaction);
     }
 
+    [HttpPut("{id}")]
+    public IActionResult Update(int id, Transaction updatedTransaction)
+    {
+        var transaction = db.Transactions.Find(id);
+
+        if (transaction == null || transaction.IsDeleted)
+            return NotFound();
+
+        transaction.Type = updatedTransaction.Type;
+        transaction.Amount = updatedTransaction.Amount;
+        transaction.Date = updatedTransaction.Date;
+        transaction.Note = updatedTransaction.Note;
+
+        db.SaveChanges();
+
+        return Ok(transaction);
+    }
+
     [HttpGet("balance")]
     public IActionResult GetBalance()
     {

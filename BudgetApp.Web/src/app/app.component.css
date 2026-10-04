@@ -31,3 +31,23 @@
 .expense {
   color: red;
 }
+
+.app-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 30px;
+}
+
+.app-layout.panel-open {
+  grid-template-columns: 1fr 1fr;
+}
+
+.main-content {
+  min-width: 0;
+}
+
+.side-panel {
+  min-width: 0;
+  border-left: 1px solid #ddd;
+  padding-left: 30px;
+}
