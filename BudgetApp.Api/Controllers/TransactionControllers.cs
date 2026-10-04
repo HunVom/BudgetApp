@@ -28,7 +28,7 @@ public class TransactionsController : ControllerBase
     {
         decimal balance = 0;
 
-        foreach (var transaction in db.Transactions)
+        foreach (var transaction in db.Transactions.Where(transaction => !transaction.IsDeleted))
         {
             if (transaction.Type == TransactionType.Income)
                 balance += transaction.Amount;
@@ -43,10 +43,25 @@ public class TransactionsController : ControllerBase
     public IActionResult GetTransactions()
     {
         var transactions = db.Transactions
+        .Where(transaction => !transaction.IsDeleted)
         .OrderByDescending(transaction => transaction.Id)
         .Take(100)
         .ToList();
 
         return Ok(transactions);
+    }
+
+    [HttpDelete("{id}")]
+    public IActionResult Delete(int id)
+    {
+        var transaction = db.Transactions.Find(id);
+
+        if (transaction == null)
+            return NotFound();
+
+        transaction.IsDeleted = true;
+        db.SaveChanges();
+
+        return Ok();
     }
 }

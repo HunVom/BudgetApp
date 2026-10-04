@@ -2,20 +2,44 @@
 
 <div>
   <label>Típus:</label>
-  <select [ngModel]="type" (ngModelChange)="type.set($event)">
-    <option value="income">Bevétel</option>
-    <option value="expense">Kiadás</option>
-  </select>
+
+  <label>
+    <input
+      type="radio"
+      name="type"
+      value="income"
+      [ngModel]="type()"
+      (ngModelChange)="type.set($event)">
+    Bevétel
+  </label>
+
+  <label>
+    <input
+      type="radio"
+      name="type"
+      value="expense"
+      [ngModel]="type()"
+      (ngModelChange)="type.set($event)">
+    Kiadás
+  </label>
 </div>
 
 <div>
   <label>Összeg:</label>
-  <input type="number" [ngModel]="amount" (ngModelChange)="amount.set($event)">
+  <input type="number" [ngModel]="amount()" (ngModelChange)="amount.set($event)">
 </div>
 
 <div>
   <label>Dátum:</label>
-  <input type="date" [ngModel]="date" (ngModelChange)="date.set($event)">
+  <input type="date" [ngModel]="date()" (ngModelChange)="date.set($event)">
+</div>
+
+<div>
+  <label>Megjegyzés:</label>
+  <input
+    type="text"
+    [ngModel]="note()"
+    (ngModelChange)="note.set($event)">
 </div>
 
 <button (click)="save()">Mentés</button>
@@ -40,12 +64,17 @@
         {{ transaction.type === 0 ? 'Bevétel' : 'Kiadás' }}
       </span>
 
+      <span class="transaction-note">
+        {{ transaction.note }}
+      </span>
+
       <span class="transaction-amount"
-        class="transaction-amount"
         [class.income]="transaction.type === 0"
         [class.expense]="transaction.type === 1">
         {{ transaction.type === 0 ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} Ft
       </span>
+
+      <button (click)="deleteTransaction(transaction.id)">Törlés</button>
     </div>
   }
 </div>
