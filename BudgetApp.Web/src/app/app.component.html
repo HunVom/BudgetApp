@@ -46,6 +46,21 @@
     (ngModelChange)="note.set($event)">
 </div>
 
+<div>
+  <label>Számla:</label>
+
+  <select
+    [ngModel]="accountId()"
+    (ngModelChange)="accountId.set(+$event)">
+
+    <option [ngValue]="0">Válassz számlát</option>
+
+    @for (account of accounts(); track account.id) {
+      <option [ngValue]="account.id">{{ account.name }}</option>
+    }
+  </select>
+</div>
+
 <button (click)="save()">Mentés</button>
 
 <hr>
@@ -53,6 +68,14 @@
 <h2>Egyenleg</h2>
 <p>{{ balance() | number:'1.0-0' }} Ft</p>
 
+<h3>Számlák egyenlege</h3>
+
+@for (account of accounts(); track account.id) {
+  <p>
+    {{ account.name }}:
+    {{ account.balance ?? 0 | number:'1.0-0' }} Ft
+  </p>
+}
 <hr>
 
 <h2>Tranzakciók</h2>
@@ -78,9 +101,10 @@
         {{ transaction.type === 0 ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} Ft
       </span>
 
+      <span>{{ getAccountName(transaction.accountId) }}</span>
+
       <button (click)="deleteTransaction(transaction.id)">Törlés</button>
       <button (click)="openEditPanel(transaction)">Szerkesztés</button>
-      <button (click)="deleteTransaction(transaction.id)">Törlés</button>
     </div>
   }
 </div>
@@ -138,11 +162,45 @@
       [ngModel]="editNote()"
       (ngModelChange)="editNote.set($event)">
   </div>
+
+  <div>
+    <label>Számla:</label>
+    <select
+      [ngModel]="editAccountId()"
+      (ngModelChange)="editAccountId.set(+$event)">
+
+      <option [ngValue]="0">Válassz számlát</option>
+
+      @for (account of accounts(); track account.id) {
+        <option [ngValue]="account.id">{{ account.name }}</option>
+      }
+    </select>
+  </div>
 }
 
 <button (click)="saveEdit()">Mentés</button>
 <button (click)="closeEditPanel()">Bezárás</button>
     </aside>
   }
+
+<hr>
+
+<h2>Számlák / zsebek</h2>
+
+<div>
+  <label>Név:</label>
+  <input
+    type="text"
+    [ngModel]="accountName()"
+    (ngModelChange)="accountName.set($event)">
+
+  <button (click)="createAccount()">Létrehozás</button>
+</div>
+
+<div>
+  @for (account of accounts(); track account.id) {
+    <p>{{ account.name }}</p>
+  }
+</div>
 
 </div>

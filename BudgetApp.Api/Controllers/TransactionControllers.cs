@@ -36,6 +36,8 @@ public class TransactionsController : ControllerBase
         transaction.Date = updatedTransaction.Date;
         transaction.Note = updatedTransaction.Note;
 
+        transaction.AccountId = updatedTransaction.AccountId;
+
         db.SaveChanges();
 
         return Ok(transaction);
@@ -47,6 +49,23 @@ public class TransactionsController : ControllerBase
         decimal balance = 0;
 
         foreach (var transaction in db.Transactions.Where(transaction => !transaction.IsDeleted))
+        {
+            if (transaction.Type == TransactionType.Income)
+                balance += transaction.Amount;
+            else
+                balance -= transaction.Amount;
+        }
+
+        return Ok(balance);
+    }
+
+    [HttpGet("balance/{accountId}")]
+    public IActionResult GetAccountBalance(int accountId)
+    {
+        decimal balance = 0;
+
+        foreach (var transaction in db.Transactions.Where(transaction =>
+            !transaction.IsDeleted && transaction.AccountId == accountId))
         {
             if (transaction.Type == TransactionType.Income)
                 balance += transaction.Amount;

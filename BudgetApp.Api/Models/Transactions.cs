@@ -8,6 +8,7 @@ public class Transaction
     public DateTime Date { get; set; }
     public bool IsDeleted { get; set; }
     public string Note { get; set; } = "";
+    public int AccountId { get; set; }
 }
 
 public enum TransactionType

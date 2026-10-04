@@ -9,6 +9,13 @@ interface Transaction {
   amount: number;
   date: string;
   note: string;
+  accountId: number;
+}
+
+interface Account {
+  id: number;
+  name: string;
+  balance?: number;
 }
 
 @Component({
@@ -31,11 +38,17 @@ export class AppComponent implements OnInit {
   protected editDate = signal<string>('');
   protected editNote = signal<string>('');
 
+  protected accountName = signal<string>('');
+  protected accounts = signal<Account[]>([]);
+  protected accountId = signal<number>(0);
+  protected editAccountId = signal<number>(0);
+
   constructor(private http: HttpClient) { }
 
   ngOnInit() {
     this.loadBalance();
     this.loadTransactions();
+    this.loadAccounts();
   }
 
   protected save() {
@@ -43,7 +56,8 @@ export class AppComponent implements OnInit {
       type: this.type() === 'income' ? 0 : 1,
       amount: this.amount(),
       date: this.date(),
-      note: this.note()
+      note: this.note(),
+      accountId: this.accountId()
     };
 
     this.http.post('http://localhost:5093/transactions', transaction)
@@ -52,6 +66,7 @@ export class AppComponent implements OnInit {
 
         this.loadBalance();
         this.loadTransactions();
+        this.loadAccounts();
 
         this.amount.set(0);
         this.date.set(this.today());
@@ -64,6 +79,7 @@ export class AppComponent implements OnInit {
       .subscribe(() => {
         this.loadBalance();
         this.loadTransactions();
+        this.loadAccounts();
       });
   }
 
@@ -77,13 +93,16 @@ export class AppComponent implements OnInit {
     type: this.editType() === 'income' ? 0 : 1,
     amount: this.editAmount(),
     date: this.editDate(),
-    note: this.editNote()
+    note: this.editNote(),
+
+    accountId: this.editAccountId()
   };
 
   this.http.put(`http://localhost:5093/transactions/${transaction.id}`, updatedTransaction)
     .subscribe(() => {
       this.loadBalance();
       this.loadTransactions();
+      this.loadAccounts();
       this.closeEditPanel();
     });
 }
@@ -95,6 +114,8 @@ export class AppComponent implements OnInit {
     this.editAmount.set(transaction.amount);
     this.editDate.set(transaction.date.substring(0, 10)); // Extract the date part from the datetime string
     this.editNote.set(transaction.note);
+
+    this.editAccountId.set(transaction.accountId);
 
     this.editPanelOpen.set(true);
   }
@@ -116,6 +137,38 @@ export class AppComponent implements OnInit {
       .subscribe(response => {
         this.transactions.set(response);
       });
+  }
+
+  protected createAccount() {
+    const account = {
+      name: this.accountName()
+    };
+
+  this.http.post('http://localhost:5093/accounts', account)
+    .subscribe(() => {
+      this.accountName.set('');
+      this.loadAccounts();
+    });
+  }
+
+  private loadAccounts() {
+  this.http.get<Account[]>('http://localhost:5093/accounts')
+    .subscribe(accounts => {
+      this.accounts.set(accounts);
+
+      for (const account of accounts) {
+        this.http.get<number>(`http://localhost:5093/transactions/balance/${account.id}`)
+          .subscribe(balance => {
+            account.balance = balance;
+            this.accounts.set([...accounts]);
+          });
+      }
+    });
+  }
+
+  protected getAccountName(accountId: number) {
+    const account = this.accounts().find(account => account.id === accountId);
+    return account?.name ?? 'Nincs számla';
   }
 
   private today() {
