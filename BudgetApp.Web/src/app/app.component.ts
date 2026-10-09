@@ -26,23 +26,34 @@ interface Account {
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  protected type = signal<string>('income');
-  protected amount = signal<number>(0);
-  protected date = signal<string>(this.today());
-  protected balance = signal<number>(0);
-  protected transactions = signal<Transaction[]>([]);
-  protected note = signal<string>('');
-  protected editPanelOpen = signal<boolean>(false);
-  protected selectedTransaction = signal<Transaction | null>(null);
-  protected editType = signal<string>('income');
-  protected editAmount = signal<number>(0);
-  protected editDate = signal<string>('');
-  protected editNote = signal<string>('');
+  
+  protected form = {
+  type: signal('income'),
+  amount: signal(0),
+  date: signal(this.today()),
+  note: signal(''),
+  accountId: signal(0)
+};
 
-  protected accountName = signal<string>('');
-  protected accounts = signal<Account[]>([]);
-  protected accountId = signal<number>(0);
-  protected editAccountId = signal<number>(0);
+protected edit = {
+  panelOpen: signal(false),
+  selectedTransaction: signal<Transaction | null>(null),
+  type: signal('income'),
+  amount: signal(0),
+  date: signal(''),
+  note: signal(''),
+  accountId: signal(0)
+};
+
+protected account = {
+  name: signal(''),
+  accounts: signal<Account[]>([])
+};
+
+ protected transactionState = {
+  balance: signal(0),
+  transactions: signal<Transaction[]>([])
+};
 
   constructor(private http: HttpClient) { }
 
@@ -54,11 +65,11 @@ export class AppComponent implements OnInit {
 
   protected save() {
     const transaction = {
-      type: this.type() === 'income' ? 0 : 1,
-      amount: this.amount(),
-      date: this.date(),
-      note: this.note(),
-      accountId: this.accountId()
+      type: this.form.type() === 'income' ? 0 : 1,
+      amount: this.form.amount(),
+      date: this.form.date(),
+      note: this.form.note(),
+      accountId: this.form.accountId()
     };
 
     this.http.post('http://localhost:5093/transactions', transaction)
@@ -69,9 +80,9 @@ export class AppComponent implements OnInit {
         this.loadTransactions();
         this.loadAccounts();
 
-        this.amount.set(0);
-        this.date.set(this.today());
-        this.note.set('');
+        this.form.amount.set(0);
+        this.form.date.set(this.today());
+        this.form.note.set('');
       });
   }
 
@@ -85,18 +96,17 @@ export class AppComponent implements OnInit {
   }
 
   protected saveEdit() {
-  const transaction = this.selectedTransaction();
+  const transaction = this.edit.selectedTransaction();
 
   if (!transaction)
     return;
 
   const updatedTransaction = {
-    type: this.editType() === 'income' ? 0 : 1,
-    amount: this.editAmount(),
-    date: this.editDate(),
-    note: this.editNote(),
-
-    accountId: this.editAccountId()
+    type: this.edit.type() === 'income' ? 0 : 1,
+    amount: this.edit.amount(),
+    date: this.edit.date(),
+    note: this.edit.note(),
+    accountId: this.edit.accountId()
   };
 
   this.http.put(`http://localhost:5093/transactions/${transaction.id}`, updatedTransaction)
@@ -109,45 +119,45 @@ export class AppComponent implements OnInit {
 }
 
   protected openEditPanel(transaction: Transaction) {
-    this.selectedTransaction.set(transaction);
+    this.edit.selectedTransaction.set(transaction);
 
-    this.editType.set(transaction.type === 0 ? 'income' : 'expense');
-    this.editAmount.set(transaction.amount);
-    this.editDate.set(transaction.date.substring(0, 10)); // Extract the date part from the datetime string
-    this.editNote.set(transaction.note);
+    this.edit.type.set(transaction.type === 0 ? 'income' : 'expense');
+    this.edit.amount.set(transaction.amount);
+    this.edit.date.set(transaction.date.substring(0, 10)); // Extract the date part from the datetime string
+    this.edit.note.set(transaction.note);
 
-    this.editAccountId.set(transaction.accountId);
+    this.edit.accountId.set(transaction.accountId);
 
-    this.editPanelOpen.set(true);
+    this.edit.panelOpen.set(true);
   }
 
     protected closeEditPanel() {
-    this.selectedTransaction.set(null);  
-    this.editPanelOpen.set(false);
+    this.edit.selectedTransaction.set(null);  
+    this.edit.panelOpen.set(false);
   }
 
   private loadBalance() {
     this.http.get<number>('http://localhost:5093/transactions/balance')
       .subscribe(response => {
-        this.balance.set(response);
+        this.transactionState.balance.set(response);
       });
   }
 
   private loadTransactions() {
     this.http.get<Transaction[]>('http://localhost:5093/transactions')
       .subscribe(response => {
-        this.transactions.set(response);
+        this.transactionState.transactions.set(response);
       });
   }
 
   protected createAccount() {
     const account = {
-      name: this.accountName()
+      name: this.account.name()
     };
 
   this.http.post('http://localhost:5093/accounts', account)
     .subscribe(() => {
-      this.accountName.set('');
+      this.account.name.set('');
       this.loadAccounts();
     });
   }
@@ -155,20 +165,20 @@ export class AppComponent implements OnInit {
   private loadAccounts() {
   this.http.get<Account[]>('http://localhost:5093/accounts')
     .subscribe(accounts => {
-      this.accounts.set(accounts);
+      this.account.accounts.set(accounts);
 
       for (const account of accounts) {
         this.http.get<number>(`http://localhost:5093/transactions/balance/${account.id}`)
           .subscribe(balance => {
             account.balance = balance;
-            this.accounts.set([...accounts]);
+            this.account.accounts.set([...accounts]);
           });
       }
     });
   }
 
   protected getAccountName(accountId: number) {
-    const account = this.accounts().find(account => account.id === accountId);
+    const account = this.account.accounts().find(account => account.id === accountId);
     return account?.name ?? 'Nincs számla';
   }
 

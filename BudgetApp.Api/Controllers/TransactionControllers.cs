@@ -46,32 +46,27 @@ public class TransactionsController : ControllerBase
     [HttpGet("balance")]
     public IActionResult GetBalance()
     {
-        decimal balance = 0;
-
-        foreach (var transaction in db.Transactions.Where(transaction => !transaction.IsDeleted))
-        {
-            if (transaction.Type == TransactionType.Income)
-                balance += transaction.Amount;
-            else
-                balance -= transaction.Amount;
-        }
+        var balance = db.Transactions
+            .Where(transaction => !transaction.IsDeleted)
+            .Sum(transaction =>
+                transaction.Type == TransactionType.Income
+                    ? transaction.Amount
+                    : -transaction.Amount);
 
         return Ok(balance);
     }
 
     [HttpGet("balance/{accountId}")]
+    [HttpGet("balance/{accountId}")]
     public IActionResult GetAccountBalance(int accountId)
     {
-        decimal balance = 0;
-
-        foreach (var transaction in db.Transactions.Where(transaction =>
-            !transaction.IsDeleted && transaction.AccountId == accountId))
-        {
-            if (transaction.Type == TransactionType.Income)
-                balance += transaction.Amount;
-            else
-                balance -= transaction.Amount;
-        }
+        var balance = db.Transactions
+            .Where(transaction =>
+                !transaction.IsDeleted && transaction.AccountId == accountId)
+            .Sum(transaction =>
+                transaction.Type == TransactionType.Income
+                    ? transaction.Amount
+                    : -transaction.Amount);
 
         return Ok(balance);
     }

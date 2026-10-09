@@ -1,4 +1,4 @@
-<div class="app-layout" [class.panel-open]="editPanelOpen()">
+<div class="app-layout" [class.panel-open]="edit.panelOpen()">
 
   <main class="main-content">
 
@@ -12,8 +12,8 @@
       type="radio"
       name="type"
       value="income"
-      [ngModel]="type()"
-      (ngModelChange)="type.set($event)">
+      [ngModel]="form.type()"
+      (ngModelChange)="form.type.set($event)">
     Bevétel
   </label>
 
@@ -22,40 +22,46 @@
       type="radio"
       name="type"
       value="expense"
-      [ngModel]="type()"
-      (ngModelChange)="type.set($event)">
+      [ngModel]="form.type()"
+      (ngModelChange)="form.type.set($event)">
     Kiadás
   </label>
 </div>
 
 <div>
   <label>Összeg:</label>
-  <input type="number" [ngModel]="amount()" (ngModelChange)="amount.set($event)">
+  <input 
+    type="number"
+    [ngModel]="form.amount()"
+    (ngModelChange)="form.amount.set($event)">
 </div>
 
 <div>
   <label>Dátum:</label>
-  <input type="date" [ngModel]="date()" (ngModelChange)="date.set($event)">
+  <input 
+    type="date"
+    [ngModel]="form.date()"
+    (ngModelChange)="form.date.set($event)">
 </div>
 
 <div>
   <label>Megjegyzés:</label>
   <input
     type="text"
-    [ngModel]="note()"
-    (ngModelChange)="note.set($event)">
+    [ngModel]="form.note()"
+    (ngModelChange)="form.note.set($event)">
 </div>
 
 <div>
   <label>Számla:</label>
 
   <select
-    [ngModel]="accountId()"
-    (ngModelChange)="accountId.set(+$event)">
+    [ngModel]="form.accountId()"
+    (ngModelChange)="form.accountId.set(+$event)">
 
     <option [ngValue]="0">Válassz számlát</option>
 
-    @for (account of accounts(); track account.id) {
+    @for (account of account.accounts(); track account.id) {
       <option [ngValue]="account.id">{{ account.name }}</option>
     }
   </select>
@@ -66,11 +72,11 @@
 <hr>
 
 <h2>Egyenleg</h2>
-<p>{{ balance() | number:'1.0-0' }} Ft</p>
+<p>{{ transactionState.balance() | number:'1.0-0' }} Ft</p>
 
 <h3>Számlák egyenlege</h3>
 
-@for (account of accounts(); track account.id) {
+@for (account of account.accounts(); track account.id) {
   <p>
     {{ account.name }}:
     {{ account.balance ?? 0 | number:'1.0-0' }} Ft
@@ -81,7 +87,7 @@
 <h2>Tranzakciók</h2>
 
 <div class="transaction-list">
-  @for (transaction of transactions(); track transaction.id) {
+  @for (transaction of transactionState.transactions(); track transaction.id) {
     <div class="transaction">
       <span class="transaction-date">
         {{ transaction.date | date:'yyyy.MM.dd.' }}
@@ -111,10 +117,10 @@
 
   </main>
 
-  @if (editPanelOpen()) {
+  @if (edit.panelOpen()) {
     <aside class="side-panel">
       <h2>Tranzakció szerkesztése</h2>
-      @if (selectedTransaction(); as transaction) {
+      @if (edit.selectedTransaction(); as transaction) {
   <div>
     <label>Típus:</label>
 
@@ -123,8 +129,8 @@
         type="radio"
         name="editType"
         value="income"
-        [ngModel]="editType()"
-        (ngModelChange)="editType.set($event)">
+        [ngModel]="edit.type()"
+        (ngModelChange)="edit.type.set($event)">
       Bevétel
     </label>
 
@@ -133,8 +139,8 @@
         type="radio"
         name="editType"
         value="expense"
-        [ngModel]="editType()"
-        (ngModelChange)="editType.set($event)">
+        [ngModel]="edit.type()"
+        (ngModelChange)="edit.type.set($event)">
       Kiadás
     </label>
   </div>
@@ -143,35 +149,35 @@
     <label>Összeg:</label>
     <input
       type="number"
-      [ngModel]="editAmount()"
-      (ngModelChange)="editAmount.set($event)">
+      [ngModel]="edit.amount()"
+      (ngModelChange)="edit.amount.set($event)">
   </div>
 
   <div>
     <label>Dátum:</label>
     <input
       type="date"
-      [ngModel]="editDate()"
-      (ngModelChange)="editDate.set($event)">
+      [ngModel]="edit.date()"
+      (ngModelChange)="edit.date.set($event)">
   </div>
 
   <div>
     <label>Megjegyzés:</label>
     <input
       type="text"
-      [ngModel]="editNote()"
-      (ngModelChange)="editNote.set($event)">
+      [ngModel]="edit.note()"
+      (ngModelChange)="edit.note.set($event)">
   </div>
 
   <div>
     <label>Számla:</label>
     <select
-      [ngModel]="editAccountId()"
-      (ngModelChange)="editAccountId.set(+$event)">
+      [ngModel]="edit.accountId()"
+      (ngModelChange)="edit.accountId.set(+$event)">
 
       <option [ngValue]="0">Válassz számlát</option>
 
-      @for (account of accounts(); track account.id) {
+      @for (account of account.accounts(); track account.id) {
         <option [ngValue]="account.id">{{ account.name }}</option>
       }
     </select>
@@ -191,14 +197,14 @@
   <label>Név:</label>
   <input
     type="text"
-    [ngModel]="accountName()"
-    (ngModelChange)="accountName.set($event)">
+    [ngModel]="account.name()"
+    (ngModelChange)="account.name.set($event)">
 
   <button (click)="createAccount()">Létrehozás</button>
 </div>
 
 <div>
-  @for (account of accounts(); track account.id) {
+  @for (account of account.accounts(); track account.id) {
     <p>{{ account.name }}</p>
   }
 </div>
