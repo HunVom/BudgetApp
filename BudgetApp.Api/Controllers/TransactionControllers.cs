@@ -17,6 +17,14 @@ public class TransactionsController : ControllerBase
     [HttpPost]
     public IActionResult Create(Transaction transaction)
     {
+        if (transaction.Amount < 0.01m)
+        return BadRequest();
+
+        var account = db.Accounts.Find(transaction.AccountId);
+
+        if (account is null || account.IsDeleted)
+        return BadRequest("A kiválasztott számla nem létezik vagy már törölve lett.");
+
         db.Transactions.Add(transaction);
         db.SaveChanges();
 
@@ -28,8 +36,15 @@ public class TransactionsController : ControllerBase
     {
         var transaction = db.Transactions.Find(id);
 
-        if (transaction == null || transaction.IsDeleted)
-            return NotFound();
+        if (transaction is null || transaction.IsDeleted)
+        return NotFound();
+
+        if (updatedTransaction.Amount < 0.01m)
+        return BadRequest();
+
+        var account = db.Accounts.Find(updatedTransaction.AccountId);
+        if (account is null || account.IsDeleted)
+        return BadRequest("A kiválasztott számla nem létezik vagy már törölve lett.");    
 
         transaction.Type = updatedTransaction.Type;
         transaction.Amount = updatedTransaction.Amount;
@@ -57,7 +72,6 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpGet("balance/{accountId}")]
-    [HttpGet("balance/{accountId}")]
     public IActionResult GetAccountBalance(int accountId)
     {
         var balance = db.Transactions
@@ -72,15 +86,22 @@ public class TransactionsController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult GetTransactions()
+    public IActionResult GetTransactions(int from = 0, int to = 100)
     {
-        var transactions = db.Transactions
+        List<Transaction> transactions = db.Transactions
         .Where(transaction => !transaction.IsDeleted)
         .OrderByDescending(transaction => transaction.Id)
-        .Take(100)
+        .Skip(from)
+        .Take(to)
         .ToList();
 
         return Ok(transactions);
+    }
+
+    [HttpGet("count")]
+    public IActionResult GetTransactionCount()
+    {
+        return Ok(db.Transactions.Count(t => !t.IsDeleted));
     }
 
     [HttpDelete("{id}")]
