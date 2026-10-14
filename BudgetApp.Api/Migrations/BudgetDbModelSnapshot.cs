@@ -15,7 +15,7 @@ namespace BudgetApp.Api.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
             modelBuilder.Entity("BudgetApp.Api.Models.Account", b =>
                 {
@@ -56,6 +56,9 @@ namespace BudgetApp.Api.Migrations
                     b.Property<string>("Note")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("TargetAccountId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");

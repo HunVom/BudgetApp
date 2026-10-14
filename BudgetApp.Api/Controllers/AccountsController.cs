@@ -68,10 +68,15 @@ public class AccountsController(BudgetDb db) : ControllerBase
             if (account is null || account.IsDeleted)
                 return NotFound();
 
+            
             var balance = db.Transactions
-                .Where(t => !t.IsDeleted && t.AccountId == id)
-                .Sum(t => t.Type == TransactionType.Income
-                    ? t.Amount : -t.Amount);
+                .Where(t => !t.IsDeleted &&
+                    (t.AccountId == id || t.TargetAccountId == id))
+                .Sum(t =>
+                    t.Type == TransactionType.Transfer
+                        ? (t.TargetAccountId == id ? t.Amount : -t.Amount)
+                        : (t.Type == TransactionType.Income ? t.Amount : -t.Amount));
+
 
             if (balance != 0)
                 return BadRequest("A számla egyenlege nem 0. Előbb rendezd az egyenleget!");

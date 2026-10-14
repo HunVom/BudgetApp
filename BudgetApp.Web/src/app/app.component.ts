@@ -6,6 +6,8 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
 
 
 import { AccountService } from './accounts/account.service';
@@ -13,7 +15,16 @@ import { TransactionService } from './transactions/transaction.service';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, DatePipe, DecimalPipe, PaginatorModule, DatePickerModule, SelectModule, ButtonModule, RadioButtonModule],
+  imports: [FormsModule,
+            DatePipe,
+            DecimalPipe,
+            PaginatorModule,
+            DatePickerModule,
+            SelectModule,
+            ButtonModule,
+            RadioButtonModule,
+            InputNumberModule,
+            InputTextModule],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.css'

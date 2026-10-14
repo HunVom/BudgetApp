@@ -26,6 +26,21 @@ public class TransactionsController : ControllerBase
         if (account is null || account.IsDeleted)
             return BadRequest("A kiválasztott számla nem létezik vagy már törölve lett.");
 
+        if (transaction.Type == TransactionType.Transfer)
+        {
+            if (transaction.TargetAccountId is null ||
+                transaction.AccountId == transaction.TargetAccountId)
+                return BadRequest("Az átvezetéshez két különböző számla szükséges.");
+
+            var targetAccount = db.Accounts.Find(transaction.TargetAccountId);
+
+            if (targetAccount is null || targetAccount.IsDeleted)
+                return BadRequest("A célszámla nem létezik vagy már törölve lett.");
+        }
+
+        if (transaction.Type != TransactionType.Transfer)
+            transaction.TargetAccountId = null;
+
         db.Transactions.Add(transaction);
         db.SaveChanges();
 
@@ -48,22 +63,39 @@ public class TransactionsController : ControllerBase
         if (account is null || account.IsDeleted)
             return BadRequest("A kiválasztott számla nem létezik vagy már törölve lett.");
 
+        if (updatedTransaction.Type == TransactionType.Transfer)
+        {
+            if (updatedTransaction.TargetAccountId is null ||
+                updatedTransaction.AccountId == updatedTransaction.TargetAccountId)
+                return BadRequest("Az átvezetéshez két különböző számla szükséges.");
+
+            var targetAccount = db.Accounts.Find(updatedTransaction.TargetAccountId);
+
+            if (targetAccount is null || targetAccount.IsDeleted)
+                return BadRequest("A célszámla nem létezik vagy már törölve lett.");
+        }
+
         transaction.Type = updatedTransaction.Type;
         transaction.Amount = updatedTransaction.Amount;
         transaction.Date = updatedTransaction.Date;
         transaction.Note = updatedTransaction.Note;
         transaction.AccountId = updatedTransaction.AccountId;
-
+        transaction.TargetAccountId = updatedTransaction.Type == TransactionType.Transfer 
+        ? updatedTransaction.TargetAccountId 
+        : null; 
         db.SaveChanges();
 
         return Ok(transaction);
     }
 
+        
     [HttpGet("balance")]
     public IActionResult GetBalance()
     {
         var balance = db.Transactions
-            .Where(t => !t.IsDeleted)
+            .Where(t => !t.IsDeleted &&
+                t.Type != TransactionType.Transfer &&
+                db.Accounts.Any(a => a.Id == t.AccountId && !a.IsDeleted))
             .Sum(t =>
                 t.Type == TransactionType.Income
                     ? t.Amount
@@ -72,15 +104,18 @@ public class TransactionsController : ControllerBase
         return Ok(balance);
     }
 
+
+    
     [HttpGet("balance/{accountId}")]
     public IActionResult GetAccountBalance(int accountId)
     {
         var balance = db.Transactions
-            .Where(t => !t.IsDeleted && t.AccountId == accountId)
+            .Where(t => !t.IsDeleted &&
+                (t.AccountId == accountId || t.TargetAccountId == accountId))
             .Sum(t =>
-                t.Type == TransactionType.Income
-                    ? t.Amount
-                    : -t.Amount);
+                t.Type == TransactionType.Transfer
+                    ? (t.TargetAccountId == accountId ? t.Amount : -t.Amount)
+                    : (t.Type == TransactionType.Income ? t.Amount : -t.Amount));
 
         return Ok(balance);
     }
@@ -125,7 +160,8 @@ public class TransactionsController : ControllerBase
                 (!dateFrom.HasValue || t.Date >= dateFrom.Value.Date) &&
                 (!dateTo.HasValue || t.Date < dateTo.Value.Date.AddDays(1)) &&
                 (!type.HasValue || t.Type == type.Value) &&
-                (!accountId.HasValue || t.AccountId == accountId.Value));
+                (!accountId.HasValue || t.AccountId == accountId.Value ||
+                (t.Type == TransactionType.Transfer && t.TargetAccountId == accountId.Value)));
     }
 
     [HttpDelete("{id}")]

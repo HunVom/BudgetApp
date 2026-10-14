@@ -3,81 +3,116 @@
 
   <main class="main-content">
 
+
     <h1>Budget App</h1>
 
     <div>
       <label>Típus:</label>
 
-      <label>
-        <input
-          type="radio"
-          name="type"
-          value="income"
-          [ngModel]="transactions.form.type()"
-          (ngModelChange)="transactions.form.type.set($event)">
-        Bevétel
-      </label>
-
-      <label>
-        <input
-          type="radio"
-          name="type"
-          value="expense"
-          [ngModel]="transactions.form.type()"
-          (ngModelChange)="transactions.form.type.set($event)">
-        Kiadás
-      </label>
-    </div>
-
-    <div>
-      <label>Összeg:</label>
-      <input
-        type="number"
-        min="0.01"
-        [ngModel]="transactions.form.amount()"
-        (ngModelChange)="transactions.form.amount.set($event); transactions.form.amountTouched.set(true)">
-
-      @if (transactions.form.amountTouched() && (!transactions.form.amount() || transactions.form.amount() < 0.01)) {
-        <small style="color: red;">Adj meg pozitív összeget!</small>
+      @for (option of [
+        { label: 'Bevétel', value: 'income' },
+        { label: 'Kiadás', value: 'expense' },
+        { label: 'Átvezetés', value: 'transfer' }
+      ]; track option.value) {
+        <div>
+          <p-radiobutton
+            name="type"
+            [value]="option.value"
+            [ngModel]="transactions.form.type()"
+            (ngModelChange)="transactions.form.type.set($event)"
+          />
+          <label>{{ option.label }}</label>
+        </div>
       }
     </div>
 
     <div>
+      <label>Összeg:</label>
+
+      <p-inputnumber
+        [ngModel]="transactions.form.amount()"
+        (ngModelChange)="transactions.form.amount.set($event); transactions.form.amountTouched.set(true)"
+        [min]="0"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="2"
+        suffix=" Ft"
+      />
+
+      @if (transactions.form.amountTouched() &&
+          (!transactions.form.amount() || transactions.form.amount() < 0.01)) {
+        <small style="color: red;">Adj meg pozitív összeget!</small>
+      }
+    </div>
+
+    
+    <div>
       <label>Dátum:</label>
+<!--
+      <p-datepicker
+        [ngModel]="transactions.parseDate(transactions.form.date())"
+        (ngModelChange)="transactions.form.date.set(transactions.formatDate($event))"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        [showButtonBar]="true"
+      />
+    
+  -->
+
       <input
         type="date"
         [ngModel]="transactions.form.date()"
-        (ngModelChange)="transactions.form.date.set($event)">
-      <input type="time" name="" id="">
-    </div>
+        (ngModelChange)="transactions.form.date.set($event)"
+      />
 
+  </div>
+  
     <div>
       <label>Megjegyzés:</label>
+
       <input
+        pInputText
         type="text"
         [ngModel]="transactions.form.note()"
-        (ngModelChange)="transactions.form.note.set($event)">
+        (ngModelChange)="transactions.form.note.set($event)"
+      />
     </div>
 
     <div>
       <label>Számla:</label>
 
-      <select
+      <p-select
+        [options]="accounts.accountState.accounts()"
+        optionLabel="name"
+        optionValue="id"
         [ngModel]="transactions.form.accountId()"
-        (ngModelChange)="transactions.form.accountId.set(+$event)">
-
-        <option [ngValue]="0">Válassz számlát</option>
-
-        @for (account of accounts.accountState.accounts(); track account.id) {
-          <option [ngValue]="account.id">{{ account.name }}</option>
-        }
-      </select>
+        (ngModelChange)="transactions.form.accountId.set($event)"
+        placeholder="Válassz számlát"
+      />
     </div>
 
-    <button (click)="transactions.save()">Mentés</button>
+    @if (transactions.form.type() === 'transfer') {
+      <div>
+        <label>Hová?</label>
+
+        <p-select
+          [options]="accounts.accountState.accounts()"
+          optionLabel="name"
+          optionValue="id"
+          [ngModel]="transactions.form.targetAccountId()"
+          (ngModelChange)="transactions.form.targetAccountId.set($event)"
+          placeholder="Válassz célszámlát"
+        />
+      </div>
+    }
+
+    <p-button
+      label="Mentés"
+      icon="pi pi-check"
+      (onClick)="transactions.save()"
+    />
 
     <hr>
-
+      
     <h2>Egyenleg</h2>
     <p>{{ transactions.transactionState.balance() | number:'1.0-0' }} Ft</p>
 
@@ -103,7 +138,7 @@
         (ngModelChange)="transactions.filters.dateRange.set($event)"
         placeholder="Válassz dátumtartományt"
       />
-    </div>
+    </div>  
         
     <div>
       <label>Tranzakció típusa:</label>
@@ -111,7 +146,8 @@
       @for (option of [
         { label: 'Összes', value: null },
         { label: 'Bevétel', value: 0 },
-        { label: 'Kiadás', value: 1 }
+        { label: 'Kiadás', value: 1 },
+        { label: 'Átvezetés', value: 2 }
       ]; track option.label) {
         <div>
           <p-radiobutton
@@ -169,7 +205,9 @@
           </span>
 
           <span class="transaction-type">
-            {{ transaction.type === 0 ? 'Bevétel' : 'Kiadás' }}
+            {{ transaction.type === 0 ? 'Bevétel'
+              : transaction.type === 1 ? 'Kiadás'
+              : 'Átvezetés' }}
           </span>
 
           <span class="transaction-note">
@@ -178,12 +216,29 @@
 
           <span
             class="transaction-amount"
-            [class.income]="transaction.type === 0"
-            [class.expense]="transaction.type === 1">
-            {{ transaction.type === 0 ? '+' : '-' }}{{ transaction.amount | number:'1.2-2' }} Ft
-          </span>
+            [class.income]="transaction.type === 0 ||
+              (transaction.type === 2 &&
+              transactions.transactionState.accountId() === transaction.targetAccountId)"
+            [class.expense]="transaction.type === 1 ||
+              (transaction.type === 2 &&
+              transactions.transactionState.accountId() !== transaction.targetAccountId)">
 
-          <span>{{ accounts.getAccountName(transaction.accountId) }}</span>
+            {{
+              transaction.type === 0 ||
+              (transaction.type === 2 &&
+              transactions.transactionState.accountId() === transaction.targetAccountId
+                ? '+' : '-'
+            }}{{ transaction.amount | number:'1.2-2' }} Ft
+          </span>
+         
+          <span>
+            {{ accounts.getAccountName(transaction.accountId) }}
+
+            @if (transaction.type === 2 && transaction.targetAccountId !== null) {
+              →
+              {{ accounts.getAccountName(transaction.targetAccountId) }}
+            }
+          </span>
 
           <button (click)="transactions.deleteTransaction(transaction.id)">
             Törlés
@@ -217,77 +272,120 @@
         <div>
           <label>Típus:</label>
 
-          <label>
-            <input
-              type="radio"
-              name="editType"
-              value="income"
-              [ngModel]="transactions.edit.type()"
-              (ngModelChange)="transactions.edit.type.set($event)">
-            Bevétel
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="editType"
-              value="expense"
-              [ngModel]="transactions.edit.type()"
-              (ngModelChange)="transactions.edit.type.set($event)">
-            Kiadás
-          </label>
+          @for (option of [
+            { label: 'Bevétel', value: 'income' },
+            { label: 'Kiadás', value: 'expense' },
+            { label: 'Átvezetés', value: 'transfer' }
+          ]; track option.value) {
+            <div>
+              <p-radiobutton
+                name="editType"
+                [value]="option.value"
+                [ngModel]="transactions.edit.type()"
+                (ngModelChange)="transactions.edit.type.set($event)"
+              />
+              <label>{{ option.label }}</label>
+            </div>
+          }
         </div>
 
         <div>
           <label>Összeg:</label>
-          <input
-            type="number"
-            [ngModel]="transactions.edit.amount()"
-            (ngModelChange)="transactions.edit.amount.set($event); transactions.edit.amountTouched.set(true)">
 
-          @if (transactions.edit.amountTouched() && (!transactions.edit.amount() || transactions.edit.amount() < 0.01)) {
+          <p-inputnumber
+            [ngModel]="transactions.edit.amount()"
+            (ngModelChange)="transactions.edit.amount.set($event); transactions.edit.amountTouched.set(true)"
+            [min]="0"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            suffix=" Ft"
+          />
+
+          @if (transactions.edit.amountTouched() &&
+              (!transactions.edit.amount() || transactions.edit.amount() < 0.01)) {
             <small style="color: red;">Adj meg pozitív összeget!</small>
           }
         </div>
 
         <div>
           <label>Dátum:</label>
+
+<!--
+
+          <p-datepicker
+            [ngModel]="transactions.parseDate(transactions.edit.date())"
+            (ngModelChange)="transactions.edit.date.set(transactions.formatDate($event))"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            [showButtonBar]="true"
+          />
+        </div>
+        -->
+
+        <div>
+          <label>Dátum:</label>
+
           <input
             type="date"
             [ngModel]="transactions.edit.date()"
-            (ngModelChange)="transactions.edit.date.set($event)">
+            (ngModelChange)="transactions.edit.date.set($event)"
+          />
         </div>
 
         <div>
           <label>Megjegyzés:</label>
+
           <input
+            pInputText
             type="text"
             [ngModel]="transactions.edit.note()"
-            (ngModelChange)="transactions.edit.note.set($event)">
+            (ngModelChange)="transactions.edit.note.set($event)"
+          />
         </div>
 
         <div>
           <label>Számla:</label>
 
-          <select
+          <p-select
+            [options]="accounts.accountState.accounts()"
+            optionLabel="name"
+            optionValue="id"
             [ngModel]="transactions.edit.accountId()"
-            (ngModelChange)="transactions.edit.accountId.set(+$event)">
-
-            <option [ngValue]="0">Válassz számlát</option>
-
-            @for (account of accounts.accountState.accounts(); track account.id) {
-              <option [ngValue]="account.id">{{ account.name }}</option>
-            }
-          </select>
+            (ngModelChange)="transactions.edit.accountId.set($event)"
+            placeholder="Válassz számlát"
+          />
         </div>
 
-      }
+        @if (transactions.edit.type() === 'transfer') {
+          <div>
+            <label>Hová?</label>
 
-      <button (click)="transactions.saveEdit()">Mentés</button>
-      <button (click)="transactions.closeEditPanel()">Bezárás</button>
+            <p-select
+              [options]="accounts.accountState.accounts()"
+              optionLabel="name"
+              optionValue="id"
+              [ngModel]="transactions.edit.targetAccountId()"
+              (ngModelChange)="transactions.edit.targetAccountId.set($event)"
+              placeholder="Válassz célszámlát"
+            />
+          </div>
+        }
+
+          <p-button
+            label="Mentés"
+            icon="pi pi-check"
+            (onClick)="transactions.saveEdit()"
+          />
+
+          <p-button
+            label="Bezárás"
+            icon="pi pi-times"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="transactions.closeEditPanel()"
+          />
 
     </aside>
-  }
 
   <hr>
 

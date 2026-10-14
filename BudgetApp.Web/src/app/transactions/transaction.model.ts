@@ -5,4 +5,5 @@ export interface Transaction {
   date: string;
   note: string;
   accountId: number;
+  targetAccountId: number | null;
 }

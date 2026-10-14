@@ -9,10 +9,12 @@ public class Transaction
     public bool IsDeleted { get; set; }
     public string Note { get; set; } = "";
     public int AccountId { get; set; }
+    public int? TargetAccountId { get; set; }
 }
 
 public enum TransactionType
 {
     Income,
-    Expense
+    Expense,
+    Transfer
 }

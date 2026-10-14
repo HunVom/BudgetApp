@@ -17,6 +17,7 @@ export class TransactionService {
     date: signal(this.today()),
     note: signal(''),
     accountId: signal(0),
+    targetAccountId: signal<number | null>(null),
     amountTouched: signal(false)
   };
 
@@ -28,6 +29,7 @@ export class TransactionService {
     date: signal(''),
     note: signal(''),
     accountId: signal(0),
+    targetAccountId: signal<number | null>(null),
     amountTouched: signal(false)
   };
 
@@ -36,6 +38,7 @@ export class TransactionService {
     dateRange: signal<Date[] | null>(null),
     type: signal<number | null>(null),
     accountId: signal<number | null>(null)
+    
   };
 
 
@@ -44,7 +47,8 @@ export class TransactionService {
     transactions: signal<Transaction[]>([]),
     from: signal(0),
     to: signal(25),
-    totalRecords: signal(0)
+    totalRecords: signal(0),
+    accountId: signal<number | null>(null)
   };
 
   constructor(
@@ -57,7 +61,7 @@ export class TransactionService {
     let params = new HttpParams();
 
     const type = this.filters.type();
-    const accountId = this.filters.accountId();
+    const accountId = this.transactionState.accountId();
 
     if (type !== null)
       params = params.set('type', type);
@@ -79,6 +83,7 @@ export class TransactionService {
 
   applyFilters() {
     this.transactionState.from.set(0);
+    this.transactionState.accountId.set(this.filters.accountId());
     this.loadTransactions();
     this.loadTransactionsCount();
   }
@@ -127,13 +132,23 @@ export class TransactionService {
     if (!Number.isFinite(this.form.amount()) || this.form.amount() < 0.01)
       return;
 
+    if (this.form.type() === 'transfer' &&
+    (!this.form.targetAccountId() ||
+     this.form.accountId() === this.form.targetAccountId()))
+    return;
+
     const transaction = {
-      type: this.form.type() === 'income' ? 0 : 1,
+      type: this.form.type() === 'income' ? 0
+          : this.form.type() === 'expense' ? 1 : 2,
       amount: this.form.amount(),
       date: this.form.date(),
       note: this.form.note(),
-      accountId: this.form.accountId()
+      accountId: this.form.accountId(),
+      targetAccountId: this.form.type() === 'transfer'
+        ? this.form.targetAccountId()
+        : null
     };
+
 
     this.http.post('http://localhost:5093/transactions', transaction)
       .subscribe(() => {
@@ -146,19 +161,21 @@ export class TransactionService {
         this.form.amountTouched.set(false);
         this.form.date.set(this.today());
         this.form.note.set('');
-      });
+        this.form.targetAccountId.set(null);
+    });
   }
 
   // Szerkesztés
 
   openEditPanel(transaction: Transaction) {
     this.edit.selectedTransaction.set(transaction);
-    this.edit.type.set(transaction.type === 0 ? 'income' : 'expense');
+    this.edit.type.set(transaction.type === 0 ? 'income' : transaction.type === 1 ? 'expense' : 'transfer');
     this.edit.amount.set(transaction.amount);
     this.edit.amountTouched.set(false);
     this.edit.date.set(transaction.date.substring(0, 10));
     this.edit.note.set(transaction.note);
     this.edit.accountId.set(transaction.accountId);
+    this.edit.targetAccountId.set(transaction.targetAccountId);
     this.edit.panelOpen.set(true);
   }
 
@@ -171,17 +188,26 @@ export class TransactionService {
     if (!Number.isFinite(this.edit.amount()) || this.edit.amount() < 0.01)
       return;
 
+    if (this.edit.type() === 'transfer' &&
+      (!this.edit.targetAccountId() ||
+      this.edit.accountId() === this.edit.targetAccountId()))
+      return;
+
     const transaction = this.edit.selectedTransaction();
 
     if (!transaction)
       return;
 
     const updatedTransaction = {
-      type: this.edit.type() === 'income' ? 0 : 1,
+      type: this.edit.type() === 'income' ? 0
+          : this.edit.type() === 'expense' ? 1 : 2,
       amount: this.edit.amount(),
       date: this.edit.date(),
       note: this.edit.note(),
-      accountId: this.edit.accountId()
+      accountId: this.edit.accountId(),
+      targetAccountId: this.edit.type() === 'transfer'
+        ? this.edit.targetAccountId()
+        : null
     };
 
     this.http.put(
@@ -246,11 +272,18 @@ export class TransactionService {
     return `${year}-${month}-${day}`;
   }
 
-  private formatDate(date: Date) {
+  formatDate(date: Date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
   }
+
+
+  parseDate(date: string): Date {
+    const [year, month, day] = date.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
 }
