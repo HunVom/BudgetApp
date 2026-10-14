@@ -90,6 +90,72 @@
       </p>
     }
 
+    <div>
+      <label for="dateRange">Dátumtartomány:</label>
+
+      <p-datepicker
+        inputId="dateRange"
+        selectionMode="range"
+        dateFormat="yy-mm-dd"
+        [readonlyInput]="true"
+        [showIcon]="true"
+        [ngModel]="transactions.filters.dateRange()"
+        (ngModelChange)="transactions.filters.dateRange.set($event)"
+        placeholder="Válassz dátumtartományt"
+      />
+    </div>
+        
+    <div>
+      <label>Tranzakció típusa:</label>
+
+      @for (option of [
+        { label: 'Összes', value: null },
+        { label: 'Bevétel', value: 0 },
+        { label: 'Kiadás', value: 1 }
+      ]; track option.label) {
+        <div>
+          <p-radiobutton
+            name="transactionType"
+            [value]="option.value"
+            [ngModel]="transactions.filters.type()"
+            (ngModelChange)="transactions.filters.type.set($event)"
+          />
+          <label>{{ option.label }}</label>
+        </div>
+      }
+    </div>
+
+    <div>
+      <label for="filterAccount">Számla:</label>
+
+      <p-select
+        inputId="filterAccount"
+        [options]="accounts.accountState.allAccounts()"
+        optionLabel="name"
+        optionValue="id"
+        [showClear]="true"
+        [ngModel]="transactions.filters.accountId()"
+        (ngModelChange)="transactions.filters.accountId.set($event)"
+        placeholder="Összes számla"
+      />
+    </div>
+
+    <div>
+      <p-button
+        label="Szűrés"
+        icon="pi pi-search"
+        (onClick)="transactions.applyFilters()"
+      />
+
+      <p-button
+        label="Szűrők törlése"
+        icon="pi pi-filter-slash"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="transactions.clearFilters()"
+      />
+    </div>
+
     <hr>
 
     <h2>Tranzakciók</h2>

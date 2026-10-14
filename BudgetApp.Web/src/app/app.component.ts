@@ -2,13 +2,18 @@ import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { PaginatorModule } from 'primeng/paginator';
+import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
+import { ButtonModule } from 'primeng/button';
+import { RadioButtonModule } from 'primeng/radiobutton';
+
 
 import { AccountService } from './accounts/account.service';
 import { TransactionService } from './transactions/transaction.service';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, DatePipe, DecimalPipe, PaginatorModule],
+  imports: [FormsModule, DatePipe, DecimalPipe, PaginatorModule, DatePickerModule, SelectModule, ButtonModule, RadioButtonModule],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.css'

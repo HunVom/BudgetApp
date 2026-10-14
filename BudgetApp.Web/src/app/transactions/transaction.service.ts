@@ -1,6 +1,6 @@
 
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { AccountService } from '../accounts/account.service';
 import { Transaction } from './transaction.model';
 
@@ -31,6 +31,14 @@ export class TransactionService {
     amountTouched: signal(false)
   };
 
+
+  filters = {
+    dateRange: signal<Date[] | null>(null),
+    type: signal<number | null>(null),
+    accountId: signal<number | null>(null)
+  };
+
+
   transactionState = {
     balance: signal(0),
     transactions: signal<Transaction[]>([]),
@@ -44,6 +52,45 @@ export class TransactionService {
     private accounts: AccountService
   ) {}
 
+
+  private filterParams() {
+    let params = new HttpParams();
+
+    const type = this.filters.type();
+    const accountId = this.filters.accountId();
+
+    if (type !== null)
+      params = params.set('type', type);
+
+    if (accountId !== null)
+      params = params.set('accountId', accountId);
+
+    const [dateFrom, dateTo] = this.filters.dateRange() ?? [];
+
+    if (dateFrom)
+      params = params.set('dateFrom', this.formatDate(dateFrom));
+
+    if (dateTo || dateFrom)
+      params = params.set('dateTo', this.formatDate(dateTo ?? dateFrom));
+
+    return params;
+  }
+
+
+  applyFilters() {
+    this.transactionState.from.set(0);
+    this.loadTransactions();
+    this.loadTransactionsCount();
+  }
+
+  clearFilters() {
+    this.filters.dateRange.set(null);
+    this.filters.type.set(null);
+    this.filters.accountId.set(null);
+
+    this.applyFilters();
+  }
+
   // Betöltés
 
   loadBalance() {
@@ -51,20 +98,27 @@ export class TransactionService {
       .subscribe(balance => this.transactionState.balance.set(balance));
   }
 
+  
   loadTransactions() {
-    const from = this.transactionState.from();
-    const to = this.transactionState.to();
+    const params = this.filterParams()
+      .set('from', this.transactionState.from())
+      .set('to', this.transactionState.to());
 
     this.http.get<Transaction[]>(
-      `http://localhost:5093/transactions?from=${from}&to=${to}`
+      'http://localhost:5093/transactions',
+      { params }
     ).subscribe(transactions =>
       this.transactionState.transactions.set(transactions)
     );
   }
 
   loadTransactionsCount() {
-    this.http.get<number>('http://localhost:5093/transactions/count')
-      .subscribe(count => this.transactionState.totalRecords.set(count));
+    this.http.get<number>(
+      'http://localhost:5093/transactions/count',
+      { params: this.filterParams() }
+    ).subscribe(count =>
+      this.transactionState.totalRecords.set(count)
+    );
   }
 
   // Létrehozás
@@ -136,6 +190,7 @@ export class TransactionService {
     ).subscribe(() => {
       this.loadBalance();
       this.loadTransactions();
+      this.loadTransactionsCount();
       this.accounts.loadAccounts();
       this.closeEditPanel();
     });
@@ -149,7 +204,7 @@ export class TransactionService {
         this.loadBalance();
         this.accounts.loadAccounts();
 
-        const remaining = this.transactionState.totalRecords() - 1;
+        const remaining = Math.max(0, this.transactionState.totalRecords() - 1);
         const from = this.transactionState.from();
         const to = this.transactionState.to();
 
@@ -159,6 +214,7 @@ export class TransactionService {
           this.transactionState.from.set(Math.max(0, from - to));
 
         this.loadTransactions();
+        this.loadTransactionsCount();
       });
   }
 
@@ -183,6 +239,14 @@ export class TransactionService {
   private today() {
     const date = new Date();
 
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  private formatDate(date: Date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
