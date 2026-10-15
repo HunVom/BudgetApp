@@ -12,7 +12,8 @@
         @for (option of [
           { label: 'Bevétel', value: 'income' },
           { label: 'Kiadás', value: 'expense' },
-          { label: 'Átvezetés', value: 'transfer' }
+          { label: 'Átvezetés', value: 'transfer' },
+          { label: 'Tartozásnövelés', value: 'debtCharge' }
         ]; track option.value) {
           <div>
             <p-radiobutton
@@ -71,7 +72,7 @@
         <label>Számla:</label>
 
         <p-select
-          [options]="accounts.accountState.accounts()"
+          [options]="accounts.getAvailableAccounts(transactions.edit.type())"
           optionLabel="name"
           optionValue="id"
           [ngModel]="transactions.edit.accountId()"

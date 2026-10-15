@@ -1,0 +1,14 @@
+
+.account-balance {
+  margin-bottom: 16px;
+}
+
+.account-balance p {
+  margin: 6px 0;
+}
+
+.account-balance progress {
+  width: 100%;
+  max-width: 300px;
+  height: 12px;
+}

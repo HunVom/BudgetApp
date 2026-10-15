@@ -7,11 +7,12 @@
           <span class="transaction-date">
             {{ transaction.date | date:'yyyy.MM.dd.' }}
           </span>
-
+          
           <span class="transaction-type">
             {{ transaction.type === 0 ? 'Bevétel'
               : transaction.type === 1 ? 'Kiadás'
-              : 'Átvezetés' }}
+              : transaction.type === 2 ? 'Átvezetés'
+              : 'Tartozásnövelés' }}
           </span>
 
           <span class="transaction-note">
@@ -24,9 +25,9 @@
               (transaction.type === 2 &&
               transactions.transactionState.accountId() === transaction.targetAccountId)"
             [class.expense]="transaction.type === 1 ||
+              transaction.type === 3 ||
               (transaction.type === 2 &&
               transactions.transactionState.accountId() !== transaction.targetAccountId)">
-
             {{
               transaction.type === 0 ||
               (transaction.type === 2 &&

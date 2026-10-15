@@ -1,11 +1,44 @@
 <h2>Számlák / zsebek</h2>
-
+  
   <div>
     <label>Név:</label>
     <input
       type="text"
       [ngModel]="accounts.accountState.name()"
       (ngModelChange)="accounts.accountState.name.set($event)">
+
+    <label>Számlatípus:</label>
+    <select
+      [ngModel]="accounts.accountState.type()"
+      (ngModelChange)="accounts.accountState.type.set($event)">
+      <option [ngValue]="0">Normál</option>
+      <option [ngValue]="1">Megtakarítás</option>
+      <option [ngValue]="2">Hitel / tartozás</option>
+    </select>
+
+    @if (accounts.accountState.type() === 1) {
+      <label>Célösszeg:</label>
+      <input
+        type="number"
+        min="0.01"
+        [ngModel]="accounts.accountState.targetAmount()"
+        (ngModelChange)="accounts.accountState.targetAmount.set($event)">
+
+      <label>Céldátum:</label>
+      <input
+        type="date"
+        [ngModel]="accounts.accountState.targetDate()"
+        (ngModelChange)="accounts.accountState.targetDate.set($event)">
+    }
+
+    @if (accounts.accountState.type() === 2) {
+      <label>Kezdeti tartozás:</label>
+      <input
+        type="number"
+        min="0"
+        [ngModel]="accounts.accountState.initialDebt()"
+        (ngModelChange)="accounts.accountState.initialDebt.set($event)">
+    }
 
     <button (click)="accounts.createAccount()">Létrehozás</button>
   </div>

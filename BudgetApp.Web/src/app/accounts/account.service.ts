@@ -7,9 +7,14 @@ import { Account } from './account.model';
   providedIn: 'root'
 })
 export class AccountService {
-
+    
   accountState = {
     name: signal(''),
+    type: signal(0),
+    targetAmount: signal<number | null>(null),
+    targetDate: signal<string | null>(null),
+    initialDebt: signal<number | null>(null),
+
     accounts: signal<Account[]>([]),
     allAccounts: signal<Account[]>([]),
     editingId: signal<number | null>(null),
@@ -26,11 +31,21 @@ export class AccountService {
         this.accountState.accounts.set(accounts);
 
         for (const account of accounts) {
-          this.http.get<number>(`http://localhost:5093/transactions/balance/${account.id}`)
-            .subscribe(balance => {
+          if (account.type === 2) {
+            this.http.get<number>(
+              `http://localhost:5093/accounts/${account.id}/debt`
+            ).subscribe(debt => {
+              account.remainingDebt = debt;
+              this.accountState.accounts.set([...accounts]);
+            });
+          } else {
+            this.http.get<number>(
+              `http://localhost:5093/transactions/balance/${account.id}`
+            ).subscribe(balance => {
               account.balance = balance;
               this.accountState.accounts.set([...accounts]);
             });
+          }
         }
       });
   }
@@ -41,15 +56,29 @@ export class AccountService {
   }
 
   // Létrehozás
-
+  
   createAccount() {
+    const state = this.accountState;
+    const name = state.name().trim();
+
+    if (!name) return;
+
     const account = {
-      name: this.accountState.name()
+      name,
+      type: state.type(),
+      targetAmount: state.type() === 1 ? state.targetAmount() : null,
+      targetDate: state.type() === 1 ? state.targetDate() : null,
+      initialDebt: state.type() === 2 ? (state.initialDebt() ?? 0) : 0
     };
 
     this.http.post('http://localhost:5093/accounts', account)
       .subscribe(() => {
-        this.accountState.name.set('');
+        state.name.set('');
+        state.type.set(0);
+        state.targetAmount.set(null);
+        state.targetDate.set(null);
+        state.initialDebt.set(null);
+
         this.loadAccounts();
         this.loadAllAccounts();
       });
@@ -66,19 +95,29 @@ export class AccountService {
     this.accountState.editingId.set(null);
     this.accountState.editingName.set('');
   }
-
+  
   saveAccountEdit() {
     const id = this.accountState.editingId();
     const name = this.accountState.editingName().trim();
 
     if (id === null || !name) return;
 
-    this.http.put(`http://localhost:5093/accounts/${id}`, { name })
-      .subscribe(() => {
-        this.loadAccounts();
-        this.loadAllAccounts();
-        this.cancelAccountEdit();
-      });
+    const account = this.accountState.accounts()
+      .find(a => a.id === id);
+
+    if (!account) return;
+
+    this.http.put(`http://localhost:5093/accounts/${id}`, {
+      name,
+      type: account.type,
+      targetAmount: account.targetAmount,
+      targetDate: account.targetDate,
+      initialDebt: account.initialDebt
+    }).subscribe(() => {
+      this.loadAccounts();
+      this.loadAllAccounts();
+      this.cancelAccountEdit();
+    });
   }
 
   // Törlés
@@ -105,5 +144,17 @@ export class AccountService {
       .find(account => account.id === accountId);
 
     return account?.name ?? 'Nincs számla';
+  }
+
+  getAvailableAccounts(type: string): Account[] {
+  const accounts = this.accountState.accounts();
+
+  if (type === 'debtCharge')
+    return accounts.filter(account => account.type === 2);
+
+  if (type === 'transfer')
+    return accounts;
+
+  return accounts.filter(account => account.type !== 2);
   }
 }

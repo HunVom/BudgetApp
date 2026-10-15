@@ -136,14 +136,25 @@ export class TransactionService {
       return;
     }
 
+    const selectedAccount = this.accounts.accountState.accounts()
+      .find(account => account.id === this.form.accountId());
+
+    if (!selectedAccount ||
+        (this.form.type() === 'debtCharge' && selectedAccount.type !== 2) ||
+        (this.form.type() !== 'debtCharge' &&
+        this.form.type() !== 'transfer' &&
+        selectedAccount.type === 2))
+      return;
+
     if (this.form.type() === 'transfer' &&
         (!this.form.targetAccountId() ||
         this.form.accountId() === this.form.targetAccountId()))
       return;
-
+    
     const transaction = {
       type: this.form.type() === 'income' ? 0
-          : this.form.type() === 'expense' ? 1 : 2,
+          : this.form.type() === 'expense' ? 1
+          : this.form.type() === 'transfer' ? 2 : 3,
       amount,
       date: this.form.date(),
       note: this.form.note(),
@@ -172,7 +183,11 @@ export class TransactionService {
 
   openEditPanel(transaction: Transaction) {
     this.edit.selectedTransaction.set(transaction);
-    this.edit.type.set(transaction.type === 0 ? 'income' : transaction.type === 1 ? 'expense' : 'transfer');
+    this.edit.type.set(
+      transaction.type === 0 ? 'income'
+      : transaction.type === 1 ? 'expense'
+      : transaction.type === 2 ? 'transfer'
+      : 'debtCharge');
     this.edit.amount.set(transaction.amount);
     this.edit.amountTouched.set(false);
     this.edit.date.set(transaction.date.substring(0, 10));
@@ -180,6 +195,7 @@ export class TransactionService {
     this.edit.accountId.set(transaction.accountId);
     this.edit.targetAccountId.set(transaction.targetAccountId);
     this.edit.panelOpen.set(true);
+    
   }
 
   closeEditPanel() {
@@ -195,6 +211,16 @@ export class TransactionService {
     return;
   }
 
+    const selectedAccount = this.accounts.accountState.accounts()
+      .find(account => account.id === this.edit.accountId());
+
+    if (!selectedAccount ||
+        (this.edit.type() === 'debtCharge' && selectedAccount.type !== 2) ||
+        (this.edit.type() !== 'debtCharge' &&
+        this.edit.type() !== 'transfer' &&
+        selectedAccount.type === 2))
+      return;
+
     if (this.edit.type() === 'transfer' &&
       (!this.edit.targetAccountId() ||
       this.edit.accountId() === this.edit.targetAccountId()))
@@ -207,7 +233,8 @@ export class TransactionService {
 
     const updatedTransaction = {
       type: this.edit.type() === 'income' ? 0
-          : this.edit.type() === 'expense' ? 1 : 2,
+          : this.edit.type() === 'expense' ? 1
+          : this.edit.type() === 'transfer' ? 2 : 3,
       amount,
       date: this.edit.date(),
       note: this.edit.note(),

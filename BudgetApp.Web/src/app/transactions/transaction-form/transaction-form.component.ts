@@ -23,7 +23,21 @@ import { AccountService } from '../../accounts/account.service';
   templateUrl: './transaction-form.component.html',
   styleUrl: './transaction-form.component.css'
 })
+
 export class TransactionFormComponent {
   protected transactions = inject(TransactionService);
   protected accounts = inject(AccountService);
+
+  getAvailableAccounts() {
+    const type = this.transactions.form.type();
+    const accounts = this.accounts.accountState.accounts();
+
+    if (type === 'debtCharge')
+      return accounts.filter(account => account.type === 2);
+
+    if (type === 'transfer')
+      return accounts;
+
+    return accounts.filter(account => account.type !== 2);
+  }
 }
