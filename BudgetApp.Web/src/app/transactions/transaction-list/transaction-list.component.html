@@ -1,0 +1,65 @@
+<h2>Tranzakciók</h2>
+
+    <div class="transaction-list">
+      @for (transaction of transactions.transactionState.transactions(); track transaction.id) {
+        <div class="transaction">
+
+          <span class="transaction-date">
+            {{ transaction.date | date:'yyyy.MM.dd.' }}
+          </span>
+
+          <span class="transaction-type">
+            {{ transaction.type === 0 ? 'Bevétel'
+              : transaction.type === 1 ? 'Kiadás'
+              : 'Átvezetés' }}
+          </span>
+
+          <span class="transaction-note">
+            {{ transaction.note }}
+          </span>
+
+          <span
+            class="transaction-amount"
+            [class.income]="transaction.type === 0 ||
+              (transaction.type === 2 &&
+              transactions.transactionState.accountId() === transaction.targetAccountId)"
+            [class.expense]="transaction.type === 1 ||
+              (transaction.type === 2 &&
+              transactions.transactionState.accountId() !== transaction.targetAccountId)">
+
+            {{
+              transaction.type === 0 ||
+              (transaction.type === 2 &&
+              transactions.transactionState.accountId() === transaction.targetAccountId)
+                ? '+' : '-'
+            }}{{ transaction.amount | number:'1.2-2' }} Ft
+          </span>
+         
+          <span>
+            {{ accounts.getAccountName(transaction.accountId) }}
+
+            @if (transaction.type === 2 && transaction.targetAccountId !== null) {
+              →
+              {{ accounts.getAccountName(transaction.targetAccountId) }}
+            }
+          </span>
+
+          <button (click)="transactions.deleteTransaction(transaction.id)">
+            Törlés
+          </button>
+
+          <button (click)="transactions.openEditPanel(transaction)">
+            Szerkesztés
+          </button>
+
+        </div>
+      }
+    </div>
+
+    <p-paginator
+      [first]="transactions.transactionState.from()"
+      [rows]="transactions.transactionState.to()"
+      [totalRecords]="transactions.transactionState.totalRecords()"
+      [rowsPerPageOptions]="[10, 25, 50, 100]"
+      (onPageChange)="transactions.changePage($event.first ?? 0, $event.rows ?? 25)"
+    />

@@ -1,0 +1,11 @@
+<h2>Egyenleg</h2>
+    <p>{{ transactions.transactionState.balance() | number:'1.0-0' }} Ft</p>
+
+    <h3>Számlák egyenlege</h3>
+
+    @for (account of accounts.accountState.accounts(); track account.id) {
+      <p>
+        {{ account.name }}:
+        {{ account.balance ?? 0 | number:'1.0-0' }} Ft
+      </p>
+    }

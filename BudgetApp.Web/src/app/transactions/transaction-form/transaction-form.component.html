@@ -1,0 +1,93 @@
+
+<div>
+  <label>Típus:</label>
+
+  @for (option of [
+    { label: 'Bevétel', value: 'income' },
+    { label: 'Kiadás', value: 'expense' },
+    { label: 'Átvezetés', value: 'transfer' }
+  ]; track option.value) {
+    <div>
+      <p-radiobutton
+        name="type"
+        [value]="option.value"
+        [ngModel]="transactions.form.type()"
+        (ngModelChange)="transactions.form.type.set($event)"
+      />
+      <label>{{ option.label }}</label>
+    </div>
+  }
+</div>
+
+<div>
+  <label>Összeg:</label>
+
+  <p-inputnumber
+    [ngModel]="transactions.form.amount()"
+    (ngModelChange)="transactions.form.amount.set($event); transactions.form.amountTouched.set(true)"
+    [min]="0"
+    [minFractionDigits]="0"
+    [maxFractionDigits]="2"
+    suffix=" Ft"
+  />
+
+  @if (transactions.form.amountTouched() &&
+      (!transactions.form.amount() || transactions.form.amount() < 0.01)) {
+    <small style="color: red;">Adj meg pozitív összeget!</small>
+  }
+</div>
+
+<div>
+  <label>Dátum:</label>
+
+  <input
+    type="date"
+    [ngModel]="transactions.form.date()"
+    (ngModelChange)="transactions.form.date.set($event)"
+  />
+</div>
+
+<div>
+  <label>Megjegyzés:</label>
+
+  <input
+    pInputText
+    type="text"
+    [ngModel]="transactions.form.note()"
+    (ngModelChange)="transactions.form.note.set($event)"
+  />
+</div>
+
+<div>
+  <label>Számla:</label>
+
+  <p-select
+    [options]="accounts.accountState.accounts()"
+    optionLabel="name"
+    optionValue="id"
+    [ngModel]="transactions.form.accountId()"
+    (ngModelChange)="transactions.form.accountId.set($event)"
+    placeholder="Válassz számlát"
+  />
+</div>
+
+@if (transactions.form.type() === 'transfer') {
+  <div>
+    <label>Hová?</label>
+
+    <p-select
+      [options]="accounts.accountState.accounts()"
+      optionLabel="name"
+      optionValue="id"
+      [ngModel]="transactions.form.targetAccountId()"
+      (ngModelChange)="transactions.form.targetAccountId.set($event)"
+      placeholder="Válassz célszámlát"
+    />
+  </div>
+}
+
+<p-button
+  label="Mentés"
+  icon="pi pi-check"
+  (onClick)="transactions.save()"
+/>

@@ -1,30 +1,23 @@
 import { Component, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe } from '@angular/common';
-import { PaginatorModule } from 'primeng/paginator';
-import { DatePickerModule } from 'primeng/datepicker';
-import { SelectModule } from 'primeng/select';
-import { ButtonModule } from 'primeng/button';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextModule } from 'primeng/inputtext';
-
-
-import { AccountService } from './accounts/account.service';
 import { TransactionService } from './transactions/transaction.service';
+import { TransactionFormComponent } from './transactions/transaction-form/transaction-form.component';
+import { TransactionFiltersComponent } from './transactions/transaction-filters/transaction-filters.component';
+import { TransactionListComponent } from './transactions/transaction-list/transaction-list.component';
+import { TransactionEditComponent } from './transactions/transaction-edit/transaction-edit.component';
+import { AccountService } from './accounts/account.service';
+import { AccountManagementComponent } from './accounts/account-management/account-management.component';
+import { AccountBalancesComponent } from './accounts/account-balances/account-balances.component';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule,
-            DatePipe,
-            DecimalPipe,
-            PaginatorModule,
-            DatePickerModule,
-            SelectModule,
-            ButtonModule,
-            RadioButtonModule,
-            InputNumberModule,
-            InputTextModule],
+  imports: [
+    TransactionFormComponent,
+    TransactionFiltersComponent,
+    TransactionListComponent,
+    TransactionEditComponent,
+    AccountBalancesComponent,
+    AccountManagementComponent
+  ],
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.component.css'
@@ -42,15 +35,4 @@ export class AppComponent implements OnInit {
     this.transactions.loadTransactions();
     this.transactions.loadTransactionsCount();
   }
-
-  protected deleteAccount(id: number) {           
-    this.accounts.deleteAccount(id, () => {
-      this.transactions.clearDeletedAccount(id);
-    });
-  }
-
-  // A számlatörlés az AccountService feladata, de sikeres törlés után
-  // a TransactionService-ben is törölni kell a kiválasztott számlát.
-  // A deleteAccount() metódus csak a két service működését hangolja össze,
-  // üzleti logikát nem tartalmaz.
 }

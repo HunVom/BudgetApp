@@ -1,0 +1,45 @@
+<h2>Számlák / zsebek</h2>
+
+  <div>
+    <label>Név:</label>
+    <input
+      type="text"
+      [ngModel]="accounts.accountState.name()"
+      (ngModelChange)="accounts.accountState.name.set($event)">
+
+    <button (click)="accounts.createAccount()">Létrehozás</button>
+  </div>
+
+  <div>
+    @for (account of accounts.accountState.accounts(); track account.id) {
+
+      @if (accounts.accountState.editingId() === account.id) {
+
+        <input
+          type="text"
+          [ngModel]="accounts.accountState.editingName()"
+          (ngModelChange)="accounts.accountState.editingName.set($event)"
+        />
+
+        <button type="button" (click)="accounts.saveAccountEdit()">
+          Mentés
+        </button>
+
+        <button type="button" (click)="accounts.cancelAccountEdit()">
+          Mégse
+        </button>
+
+      } @else {
+
+        <p>{{ account.name }}</p>
+
+        <button (click)="accounts.startAccountEdit(account)">
+          Átnevezés
+        </button>
+
+        <button (click)="deleteAccount(account.id)">
+          Törlés
+        </button>
+
+      }
+    }
