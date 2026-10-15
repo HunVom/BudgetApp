@@ -31,7 +31,9 @@
 
         <p-inputnumber
           [ngModel]="transactions.edit.amount()"
-          (ngModelChange)="transactions.edit.amount.set($event); transactions.edit.amountTouched.set(true)"
+          (ngModelChange)="transactions.edit.amount.set($event)"
+          (onBlur)="transactions.edit.amountTouched.set(true)"
+          placeholder="0"
           [min]="0"
           [minFractionDigits]="0"
           [maxFractionDigits]="2"
@@ -39,7 +41,7 @@
         />
 
         @if (transactions.edit.amountTouched() &&
-            (!transactions.edit.amount() || transactions.edit.amount() < 0.01)) {
+    (transactions.edit.amount() ?? 0) < 0.01) {
           <small style="color: red;">Adj meg pozitív összeget!</small>
         }
       </div>

@@ -13,7 +13,7 @@ export class TransactionService {
 
   form = {
     type: signal('income'),
-    amount: signal(0),
+    amount: signal<number | null>(null),
     date: signal(this.today()),
     note: signal(''),
     accountId: signal(0),
@@ -25,7 +25,7 @@ export class TransactionService {
     panelOpen: signal(false),
     selectedTransaction: signal<Transaction | null>(null),
     type: signal('income'),
-    amount: signal(0),
+    amount: signal<number | null>(null),
     date: signal(''),
     note: signal(''),
     accountId: signal(0),
@@ -129,18 +129,22 @@ export class TransactionService {
   // Létrehozás
 
   save() {
-    if (!Number.isFinite(this.form.amount()) || this.form.amount() < 0.01)
+    const amount = this.form.amount();
+
+    if (amount === null || !Number.isFinite(amount) || amount < 0.01) {
+      this.form.amountTouched.set(true);
       return;
+    }
 
     if (this.form.type() === 'transfer' &&
-    (!this.form.targetAccountId() ||
-     this.form.accountId() === this.form.targetAccountId()))
-    return;
+        (!this.form.targetAccountId() ||
+        this.form.accountId() === this.form.targetAccountId()))
+      return;
 
     const transaction = {
       type: this.form.type() === 'income' ? 0
           : this.form.type() === 'expense' ? 1 : 2,
-      amount: this.form.amount(),
+      amount,
       date: this.form.date(),
       note: this.form.note(),
       accountId: this.form.accountId(),
@@ -149,7 +153,6 @@ export class TransactionService {
         : null
     };
 
-
     this.http.post('http://localhost:5093/transactions', transaction)
       .subscribe(() => {
         this.loadBalance();
@@ -157,12 +160,12 @@ export class TransactionService {
         this.loadTransactionsCount();
         this.accounts.loadAccounts();
 
-        this.form.amount.set(0);
+        this.form.amount.set(null);
         this.form.amountTouched.set(false);
         this.form.date.set(this.today());
         this.form.note.set('');
         this.form.targetAccountId.set(null);
-    });
+      });
   }
 
   // Szerkesztés
@@ -185,8 +188,12 @@ export class TransactionService {
   }
 
   saveEdit() {
-    if (!Number.isFinite(this.edit.amount()) || this.edit.amount() < 0.01)
-      return;
+  const amount = this.edit.amount();
+
+  if (amount === null || !Number.isFinite(amount) || amount < 0.01) {
+    this.edit.amountTouched.set(true);
+    return;
+  }
 
     if (this.edit.type() === 'transfer' &&
       (!this.edit.targetAccountId() ||
@@ -201,7 +208,7 @@ export class TransactionService {
     const updatedTransaction = {
       type: this.edit.type() === 'income' ? 0
           : this.edit.type() === 'expense' ? 1 : 2,
-      amount: this.edit.amount(),
+      amount,
       date: this.edit.date(),
       note: this.edit.note(),
       accountId: this.edit.accountId(),
